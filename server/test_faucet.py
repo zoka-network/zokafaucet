@@ -91,12 +91,16 @@ class Limits(unittest.TestCase):
             raw = (Path(tmp) / "f.sqlite").read_bytes()
             self.assertNotIn(b"203.0.113", raw)
 
-    def test_a_claim_being_paid_goes_back_to_the_queue_after_a_restart(self):
+    def test_a_claim_being_paid_is_not_paid_again_after_a_restart(self):
         with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as tmp:
             s = store(tmp)
             a, _ = s.admit(ALICE, "203.0.113.1", ATOMS, 99 * ATOMS, 1.0)
             s.set(a, "sending")
-            self.assertEqual(store(tmp).get(a)["status"], "queued")
+            s.close()
+            again = store(tmp)
+            self.assertEqual(again.get(a)["status"], "sent")
+            self.assertIsNone(again.next_queued())
+            again.close()
 
 
 class FakeEngine:
@@ -106,17 +110,22 @@ class FakeEngine:
         self.balance = {"spendable_atoms": 20_000 * ATOMS, "max_sendable_atoms": 19_999 * ATOMS, "pending_payment": None, "node_behind": False}
         self.calls: list[list[str]] = []
         self.send_error = ""
+        # What the node code prints before the answer when the mirror takes a checkpoint.
+        self.before = '{"checkpoint_accepted":5326,"hash":"ab","from":"8aa55aa80f"}' + "\n"
+        self.send_reply = json.dumps({"txid": "ab" * 32, "fee_atoms": 200})
 
     def __call__(self, args, **kw):
         self.calls.append(args)
         self.env = kw["env"]
         action = args[2]
         if action == "balance":
-            return subprocess.CompletedProcess(args, 0, json.dumps(self.balance), "")
+            return subprocess.CompletedProcess(args, 0, self.before + json.dumps(self.balance), "")
         if self.send_error:
             return subprocess.CompletedProcess(args, 1, "", self.send_error)
         self.balance["pending_payment"] = {"txid": "ab" * 32}
-        return subprocess.CompletedProcess(args, 0, json.dumps({"txid": "ab" * 32, "fee_atoms": 200}), "")
+        self.balance["reserved_atoms"] = 20_000 * ATOMS
+        self.balance["spendable_atoms"] = 0
+        return subprocess.CompletedProcess(args, 0, self.before + self.send_reply, "")
 
 
 def config(tmp: str) -> Config:
@@ -171,6 +180,21 @@ class Paying(unittest.TestCase):
         found = self.store.get(a)
         self.assertEqual(found["status"], "failed")
         self.assertIn("could not pay that address", found["error"])
+
+    def test_a_sent_payment_whose_reply_cannot_be_read_still_counts_as_sent(self):
+        a, _ = self.store.admit(ALICE, "203.0.113.1", 10 * ATOMS, 400 * ATOMS, time.time())
+        self.engine.send_reply = "Sent. (not JSON)"
+        self.worker.step()
+        found = self.store.get(a)
+        self.assertEqual(found["status"], "sent")
+        self.assertEqual(found["txid"], "ab" * 32)  # from the wallet's pending payment
+        # The reserved note still counts in the faucet's balance.
+        self.assertEqual(self.state.spendable_atoms + self.state.reserved_atoms, 20_000 * ATOMS)
+
+    def test_reads_the_answer_after_other_json_lines(self):
+        self.assertEqual(faucet.last_json_line('{"checkpoint_accepted":1}' + "\n" + '{"txid":"ab"}' + "\n"), {"txid": "ab"})
+        self.assertIsNone(faucet.last_json_line("no json here"))
+        self.assertEqual(faucet.last_json_line('{"a":1}' + "\n" + "{broken"), {"a": 1})
 
     def test_an_empty_faucet_keeps_the_queue(self):
         a, _ = self.store.admit(ALICE, "203.0.113.1", 10 * ATOMS, 400 * ATOMS, time.time())

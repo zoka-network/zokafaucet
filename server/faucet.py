@@ -137,10 +137,12 @@ class Store:
         self.db.execute("CREATE INDEX IF NOT EXISTS claims_address ON claims(address, created)")
         self.db.execute("CREATE INDEX IF NOT EXISTS claims_ip ON claims(ip_hash, created)")
         self.db.execute("CREATE INDEX IF NOT EXISTS claims_status ON claims(status, created)")
-        # A claim that was being paid when the service stopped goes back to the
-        # queue: the wallet engine tells whether its payment left (pending).
+        # A claim that was being paid when the service stopped is never paid
+        # again on its own: its payment may have left. It counts as sent.
         with self.lock:
-            self.db.execute("UPDATE claims SET status='queued' WHERE status='sending'")
+            self.db.execute(
+                "UPDATE claims SET status='sent', error='interrupted while sending' WHERE status='sending'"
+            )
 
     def close(self) -> None:
         with self.lock:
@@ -273,11 +275,14 @@ class Wallet:
         if done.returncode != 0:
             reason = (done.stderr or output or f"exit {done.returncode}").strip().splitlines()
             raise WalletError(reason[-1] if reason else f"{action} failed")
-        start = output.find("{")
-        try:
-            return json.loads(output[start:]) if start >= 0 else {}
-        except json.JSONDecodeError as exc:
-            raise WalletError(f"{action}: unreadable reply") from exc
+        reply = last_json_line(output)
+        if reply is None:
+            # The engine succeeded but its answer cannot be read. A send that
+            # exits 0 was accepted by the node: it must not be tried again.
+            if action == "send":
+                return {}
+            raise WalletError(f"{action}: unreadable reply")
+        return reply
 
     def balance(self) -> dict:
         return self._call("balance", [], timeout=600)
@@ -285,6 +290,22 @@ class Wallet:
     def send(self, to: str, amount_atoms: int) -> dict:
         amount = format_zka(amount_atoms).replace(",", "")
         return self._call("send", ["--to", to, "--amount", amount, "--memo", self.config.memo], timeout=900)
+
+
+def last_json_line(output: str) -> Optional[dict]:
+    """The engine's answer: its last line holding a JSON object. The node code
+    it runs may print other JSON lines first, such as an accepted checkpoint."""
+    for line in reversed(output.splitlines()):
+        line = line.strip()
+        if not line.startswith("{"):
+            continue
+        try:
+            value = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(value, dict):
+            return value
+    return None
 
 
 def short_is_published(api: str, short: str, opener: Callable = urllib.request.urlopen) -> bool:
@@ -323,6 +344,7 @@ class State:
     """What the worker last learned of the wallet, for /faucet/status."""
 
     spendable_atoms: Optional[int] = None
+    reserved_atoms: int = 0
     max_sendable_atoms: Optional[int] = None
     pending: bool = False
     in_sync: bool = False
@@ -343,6 +365,7 @@ class Worker:
         figures = self.wallet.balance()
         s = self.state
         s.spendable_atoms = int(figures.get("spendable_atoms") or 0)
+        s.reserved_atoms = int(figures.get("reserved_atoms") or 0)
         s.max_sendable_atoms = int(figures.get("max_sendable_atoms") or 0)
         s.pending = bool(figures.get("pending_payment"))
         s.in_sync = not figures.get("node_behind")
@@ -380,8 +403,16 @@ class Worker:
                 return 30
             self.store.set(claim_id, "failed", error=public_reason(reason))
             return 5
-        txid = str(reply.get("txid", ""))
-        self.store.set(claim_id, "sent", txid=txid, error=None)
+        txid = str(reply.get("txid") or "")
+        if not txid:
+            # Sent, but its id was not readable: the wallet's pending payment has it.
+            try:
+                pending = self.refresh().get("pending_payment")
+                if isinstance(pending, dict):
+                    txid = str(pending.get("txid") or "")
+            except WalletError:
+                pass
+        self.store.set(claim_id, "sent", txid=txid or None, error=None)
         log(f"sent {format_zka(amount)} ZKA, claim {claim_id[:8]}, tx {txid[:16]}")
         return 5
 
@@ -568,7 +599,8 @@ def status_body(app: App) -> dict:
         "left_24h_atoms": left,
         "queue": figures["queue"],
         "sent_total": figures["sent_total"],
-        "balance": None if s.spendable_atoms is None else format_zka(s.spendable_atoms),
+        # What the wallet holds, also what a payment waiting for its block keeps reserved.
+        "balance": None if s.spendable_atoms is None else format_zka(s.spendable_atoms + s.reserved_atoms),
         "ready": bool(s.checked) and s.in_sync and not s.empty,
         "empty": s.empty,
     }
