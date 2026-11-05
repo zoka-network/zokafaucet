@@ -1,0 +1,21 @@
+{
+  "name": "zokafaucet",
+  "private": true,
+  "version": "0.1.0",
+  "description": "The Zoka Quantic Testnet faucet: 10 test ZKA a day for wallets that do not mine.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build && node scripts/checksums.mjs",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "devDependencies": {
+    "@types/node": "22.16.5",
+    "jsdom": "20.0.3",
+    "typescript": "5.8.3",
+    "vite": "5.4.21",
+    "vitest": "3.2.4"
+  }
+}

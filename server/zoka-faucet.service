@@ -1,0 +1,38 @@
+[Unit]
+Description=Zoka faucet (Zoka Quantic Testnet v2)
+After=network-online.target zoka-seed.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=zoka-faucet
+Group=zoka-faucet
+WorkingDirectory=/var/lib/zoka-faucet
+ExecStart=/usr/bin/python3 /opt/zoka-faucet/faucet.py --listen 127.0.0.1:9300 --data /var/lib/zoka-faucet --zoka /usr/local/bin/zoka --api http://127.0.0.1:9190 --peer /var/lib/zoka-faucet/seed2.descriptor.json --amount-zka 10 --daily-cap-zka 400
+# The wallet password and the Turnstile secret, read by systemd from root-only files.
+LoadCredential=password:/root/faucet.password
+LoadCredential=turnstile:/root/faucet-turnstile.secret
+Restart=on-failure
+RestartSec=15
+UMask=0077
+NoNewPrivileges=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/zoka-faucet
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+# iroh lists the network interfaces through netlink.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
+CapabilityBoundingSet=
+
+[Install]
+WantedBy=multi-user.target

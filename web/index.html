@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#000000" />
+    <meta name="description" content="Zoka Quantic Testnet faucet: 10 test ZKA a day for your wallet, to try private payments without mining." />
+    <link rel="icon" type="image/png" href="/zoka-icon.png" />
+    <title>Zoka Faucet · Zoka Quantic Testnet</title>
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="site-nav">
+          <a class="brand" href="https://zoka.network" aria-label="zoka.network">
+            <span class="brand-name">ZOKA FAUCET</span>
+            <span class="brand-net">Zoka Quantic Testnet</span>
+          </a>
+          <nav class="bar-links" aria-label="Zoka">
+            <a href="https://wallet.zoka.network" target="_blank" rel="noopener noreferrer">Web wallet ↗</a>
+            <a href="https://zokascan.cc" target="_blank" rel="noopener noreferrer">ZokaScan ↗</a>
+            <a href="https://zoka.network" target="_blank" rel="noopener noreferrer" class="wide-only">zoka.network ↗</a>
+          </nav>
+        </div>
+      </header>
+
+      <main class="content">
+        <div class="hero">
+          <section class="intro">
+            <p class="eyebrow">Zoka Quantic Testnet · Faucet</p>
+            <h1 class="title">Test ZKA for <em>your wallet.</em></h1>
+            <p class="lede">
+              <span data-amount>10</span> ZKA a day for each wallet, to try private payments without mining. Test
+              coins only: they have no value.
+            </p>
+          </section>
+          <div class="stats figures" aria-label="Faucet figures">
+              <div class="stat">
+                <p class="label">Per request</p>
+                <p class="stat-value"><span data-amount>10</span> ZKA</p>
+                <p class="stat-hint">Once a day per wallet</p>
+              </div>
+              <div class="stat">
+                <p class="label">Left today</p>
+                <p class="stat-value" data-left>—</p>
+                <p class="stat-hint">Of <span data-cap>400</span> ZKA every 24 hours</p>
+              </div>
+              <div class="stat">
+                <p class="label">In line</p>
+                <p class="stat-value" data-queue>—</p>
+                <p class="stat-hint">One payment per block</p>
+              </div>
+              <div class="stat">
+                <p class="label">Sent so far</p>
+                <p class="stat-value" data-sent>—</p>
+                <p class="stat-hint">Payments from the faucet</p>
+              </div>
+          </div>
+
+          <section class="panel claim" aria-label="Get test ZKA">
+            <div class="panel-head">
+              <h2 class="label">Get <span data-amount>10</span> ZKA</h2>
+              <span class="live"><span class="dot" data-dot></span><span data-live>Checking the faucet…</span></span>
+            </div>
+            <form class="panel-body stack" data-form novalidate>
+              <div class="field">
+                <label class="label" for="address">Your short address</label>
+                <input
+                  id="address"
+                  class="input mono-input"
+                  name="address"
+                  placeholder="zqtest2…"
+                  autocomplete="off"
+                  autocapitalize="off"
+                  spellcheck="false"
+                  required
+                />
+                <p class="hint" data-address-hint>
+                  Copy it from Receive in the web wallet, ZKAPriv or ZSilent.
+                </p>
+                <p class="error" data-address-error role="alert" hidden></p>
+              </div>
+              <div class="field">
+                <span class="label">Check</span>
+                <div class="turnstile" data-turnstile></div>
+                <p class="error" data-token-error role="alert" hidden></p>
+              </div>
+              <button type="submit" class="btn primary block" data-submit disabled>
+                Send me <span data-amount>10</span> ZKA
+              </button>
+              <p class="error" data-form-error role="alert" hidden></p>
+              <div class="result" data-result hidden aria-live="polite"></div>
+            </form>
+          </section>
+        </div>
+
+        <h2 class="heading section-gap">No wallet yet?</h2>
+        <p class="lede tight">Any of them gives you a short address. The same 24 words open the same wallet in all three.</p>
+        <div class="cards">
+          <a class="card" href="https://wallet.zoka.network" target="_blank" rel="noopener noreferrer">
+            <p class="label">In the browser</p>
+            <h3>Web wallet</h3>
+            <p>Nothing to install. Your words and payment proofs stay in your browser.</p>
+            <span class="link">Open the web wallet ↗</span>
+          </a>
+          <a class="card" href="https://zoka.network/#download" target="_blank" rel="noopener noreferrer">
+            <p class="label">For Android</p>
+            <h3>ZKAPriv</h3>
+            <p>Private payments on your phone, which builds each payment's proof.</p>
+            <span class="link">Download ZKAPriv ↗</span>
+          </a>
+          <a class="card" href="https://zoka.network/#download" target="_blank" rel="noopener noreferrer">
+            <p class="label">For Windows</p>
+            <h3>ZSilent</h3>
+            <p>The desktop wallet, with its own node, mining and an explorer.</p>
+            <span class="link">Download ZSilent ↗</span>
+          </a>
+        </div>
+      </main>
+
+      <footer class="site-footer">
+        <div class="site-footer-inner">
+          <span>Zoka Faucet · Zoka Quantic Testnet · test coins only</span>
+          <nav aria-label="Zoka links">
+            <a href="https://zoka.network" target="_blank" rel="noopener noreferrer">zoka.network ↗</a>
+            <a href="https://zokascan.cc" target="_blank" rel="noopener noreferrer">ZokaScan ↗</a>
+            <a href="https://github.com/zoka-network/zokafaucet" target="_blank" rel="noopener noreferrer">Source code ↗</a>
+          </nav>
+          <!-- GitHub, X and Discord, drawn as on zoka.network (GitHub and Discord: Lucide 0.462, ISC License). -->
+          <div class="socials">
+            <a href="https://github.com/zoka-network" target="_blank" rel="noopener noreferrer" aria-label="GitHub" class="social">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+                <path d="M9 18c-4.51 2-5-2-7-2" />
+              </svg>
+            </a>
+            <a href="https://x.com/zokanetwork" target="_blank" rel="noopener noreferrer" aria-label="X / Twitter" class="social">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 3h4.5L20 21h-4.5L4 3Z" stroke="currentColor" stroke-width="1.4" />
+                <path d="m20 3-7 8M4 21l7-8" stroke="currentColor" stroke-width="1.4" />
+              </svg>
+            </a>
+            <a href="https://discord.gg/uZRPcNb3m7" target="_blank" rel="noopener noreferrer" aria-label="Discord" class="social">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </footer>
+    </div>
+    <noscript>The Zoka faucet needs JavaScript for its check.</noscript>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
