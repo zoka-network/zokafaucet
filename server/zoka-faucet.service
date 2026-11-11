@@ -1,5 +1,5 @@
 [Unit]
-Description=Zoka faucet (Zoka Quantic Testnet v2)
+Description=Zoka faucet (Zoka Quantic Testnet v3)
 After=network-online.target zoka-seed.service
 Wants=network-online.target
 

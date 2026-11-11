@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Zoka faucet: test ZKA for wallets that do not mine (Zoka Quantic Testnet v2).
+"""Zoka faucet: test ZKA for wallets that do not mine (Zoka Quantic Testnet v3).
 
 It runs next to seed2, behind the Cloudflare tunnel of api.zokascan.cc, which
 sends it the paths under /faucet/. Only the Python standard library is used.
@@ -591,7 +591,7 @@ def status_body(app: App) -> dict:
     s = app.state
     left = max(0, app.config.daily_cap_atoms - figures["given_24h_atoms"])
     return {
-        "network": "Zoka Quantic Testnet v2",
+        "network": "Zoka Quantic Testnet v3",
         "amount": format_zka(app.config.amount_atoms),
         "amount_atoms": app.config.amount_atoms,
         "daily_cap": format_zka(app.config.daily_cap_atoms),
@@ -632,7 +632,7 @@ def load_salt(data: Path) -> bytes:
 
 
 def main(argv: Optional[list[str]] = None) -> int:
-    p = argparse.ArgumentParser(description="Zoka faucet (Zoka Quantic Testnet v2)")
+    p = argparse.ArgumentParser(description="Zoka faucet (Zoka Quantic Testnet v3)")
     p.add_argument("--listen", default="127.0.0.1:9300")
     p.add_argument("--data", default="/var/lib/zoka-faucet")
     p.add_argument("--zoka", default="/usr/local/bin/zoka")
