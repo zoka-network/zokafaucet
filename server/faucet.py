@@ -308,10 +308,16 @@ def last_json_line(output: str) -> Optional[dict]:
     return None
 
 
+# A short address the node does not know is asked of its peers, and the
+# node answers "not published" only after about 20 s. A shorter wait turned
+# a wallet created a moment ago into "cannot reach the network" (12/11/2026).
+ADDRESS_CHECK_SECONDS = 30
+
+
 def short_is_published(api: str, short: str, opener: Callable = urllib.request.urlopen) -> bool:
     """The node knows the full address behind this short one."""
     try:
-        with opener(f"{api}/address/{urllib.parse.quote(short)}", timeout=10) as reply:
+        with opener(f"{api}/address/{urllib.parse.quote(short)}", timeout=ADDRESS_CHECK_SECONDS) as reply:
             return reply.status == 200
     except urllib.error.HTTPError:
         return False

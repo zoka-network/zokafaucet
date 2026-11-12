@@ -45,6 +45,26 @@ class Helpers(unittest.TestCase):
         for bad in ("", "zqtest2", "zq1" + ALICE[7:], ALICE + "0", ALICE.replace("Y", "l"), "zqtest2" + "F" * 1700):
             self.assertFalse(faucet.SHORT_ADDRESS.match(bad), bad)
 
+    def test_address_check_outwaits_the_node_asking_its_peers(self):
+        # The node takes about 20 s to answer that nobody knows an address.
+        waits = []
+
+        class Reply:
+            status = 200
+
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *exc):
+                return False
+
+        def opener(url, timeout):
+            waits.append(timeout)
+            return Reply()
+
+        self.assertTrue(faucet.short_is_published("http://127.0.0.1:9190", ALICE, opener))
+        self.assertGreaterEqual(waits[0], 25)
+
 
 class Limits(unittest.TestCase):
     def test_one_claim_per_wallet_and_per_ip_a_day(self):
